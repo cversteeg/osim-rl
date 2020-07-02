@@ -5,6 +5,7 @@ from .utils.mygym import convert_to_gym
 import gym
 import opensim
 import random
+import akro
 
 ## OpenSim interface
 # The amin purpose of this class is to provide wrap all 
@@ -289,7 +290,7 @@ class OsimEnv(gym.Env):
     def is_done(self):
         return False
 
-    def __init__(self, visualize = True, integrator_accuracy = 5e-5):
+    def __init__(self, visualize = False, integrator_accuracy = 5e-3):
         self.visualize = visualize
         self.integrator_accuracy = integrator_accuracy
         self.load_model()
@@ -303,7 +304,9 @@ class OsimEnv(gym.Env):
         # Create specs, action and observation spaces mocks for compatibility with OpenAI gym
         self.spec = Spec()
         self.spec.timestep_limit = self.time_limit
-
+        self.spec.action_space = akro.Box(low = 0, high = 1, shape = (self.osim_model.get_action_space_size(), ) )
+        self.spec.observation_space = akro.Box(low = -math.pi*100, high = math.pi*100, shape = (self.get_observation_space_size(), ) )
+        
         self.action_space = ( [0.0] * self.osim_model.get_action_space_size(), [1.0] * self.osim_model.get_action_space_size() )
 #        self.observation_space = ( [-math.pi*100] * self.get_observation_space_size(), [math.pi*100] * self.get_observation_space_s
         self.observation_space = ( [0] * self.get_observation_space_size(), [0] * self.get_observation_space_size() )
@@ -344,7 +347,8 @@ class OsimEnv(gym.Env):
         self.prev_state_desc = self.get_state_desc()        
         self.osim_model.actuate(action)
         self.osim_model.integrate()
-
+        print('hello')
+        
         if project:
             if obs_as_dict:
                 obs = self.get_observation_dict()
@@ -363,6 +367,8 @@ class Spec(object):
     def __init__(self, *args, **kwargs):
         self.id = 0
         self.timestep_limit = 300
+        self.action_space = []
+        self.observation_space = []
 
 class L2M2019Env(OsimEnv):
 # to change later:

@@ -1,3 +1,4 @@
+import akro
 import math
 import numpy as np
 import os
@@ -6,10 +7,11 @@ import gym
 import opensim
 import random
 from .osim import OsimEnv
+from gym import utils
 
 class Arm2DEnv(OsimEnv):
     model_path = os.path.join(os.path.dirname(__file__), '../models/arm2dof6musc.osim')    
-    time_limit = 200
+    time_limit = 100
     target_x = 0
     target_y = 0
 
@@ -39,9 +41,19 @@ class Arm2DEnv(OsimEnv):
         res += state_desc["markers"]["r_radius_styloid"]["pos"][:2]
 
         return res
+    
+    # @property
+    # def observation_space(self):
+    #     return akro.Box(low = -math.pi*100, high = math.pi*100, shape = (self.osim_model.get_observation_space_size(), ) )
 
+    # @property
+    # def action_space(self):
+    #     return akro.Box(low = 0, high = 1, shape = (self.osim_model.get_action_space_size(), ) )
+
+    
     def get_observation_space_size(self):
         return 16 #46
+
 
     def generate_new_target(self):
         theta = random.uniform(math.pi*0, math.pi*2/3)
@@ -104,6 +116,7 @@ class Arm2DEnv(OsimEnv):
 
 
 class Arm2DVecEnv(Arm2DEnv):
+        
     def reset(self, obs_as_dict=False):
         obs = super(Arm2DVecEnv, self).reset(obs_as_dict=obs_as_dict)
         if np.isnan(obs).any():
@@ -118,3 +131,17 @@ class Arm2DVecEnv(Arm2DEnv):
             done = True
             reward -10
         return obs, reward, done, info
+    
+    def __getstate__(self):
+        """See `Object.__getstate__.
+        Returns:
+            dict: The instance’s dictionary to be pickled.
+        """
+        return dict()
+
+    def __setstate__(self, state):
+        """See `Object.__setstate__.
+        Args:
+            state (dict): Unpickled state of this object.
+        """
+        self.__init__()
