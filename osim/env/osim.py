@@ -269,9 +269,9 @@ class OsimEnv(gym.Env):
     observation_space = None
     osim_model = None
     istep = 0
-    verbose = False
+    verbose = True
 
-    visualize = False
+    visualize = True
     spec = None
     time_limit = 1e10
 
@@ -347,7 +347,6 @@ class OsimEnv(gym.Env):
         self.prev_state_desc = self.get_state_desc()        
         self.osim_model.actuate(action)
         self.osim_model.integrate()
-        print('hello')
         
         if project:
             if obs_as_dict:

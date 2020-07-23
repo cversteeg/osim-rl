@@ -109,7 +109,11 @@ class Arm2DEnv(OsimEnv):
         # print((self.target_x, self.target_y))
         if np.isnan(penalty):
             penalty = 1
-        return 1.-penalty
+        if penalty < 0.01:
+            return 1
+        else:
+            return 0
+        # return 1.-penalty
 
     def get_reward(self):
         return self.reward()
@@ -126,11 +130,29 @@ class Arm2DVecEnv(Arm2DEnv):
         if np.isnan(action).any():
             action = np.nan_to_num(action)
         obs, reward, done, info = super(Arm2DVecEnv, self).step(action, obs_as_dict=obs_as_dict)
+        print(reward)
         if np.isnan(obs).any():
             obs = np.nan_to_num(obs)
             done = True
             reward -10
         return obs, reward, done, info
+    
+    def compute_reward(self, achieved_goal, goal, info):
+        """Function to compute new reward.
+        Args:
+            achieved_goal (numpy.ndarray): Achieved goal.
+            goal (numpy.ndarray): Original desired goal.
+            info (dict): Extra information.
+        Returns:
+            float: New computed reward.
+        """
+        del info
+        penalty = (achieved_goal[-2] - goal[-2])**2 + (achieved_goal[-1] - goal[-1])**2
+        if penalty < 0.01:
+            return 1
+        else:
+            return 0
+        # return np.sum((achieved_goal[-2:] - goal[-2:])**2)
     
     def __getstate__(self):
         """See `Object.__getstate__.
