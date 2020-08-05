@@ -14,7 +14,7 @@ class Arm2DEnv(OsimEnv):
     time_limit = 100
     target_x = 0
     target_y = 0
-
+    targCond = 1
     def get_observation(self):
         state_desc = self.get_state_desc()
 
@@ -56,11 +56,27 @@ class Arm2DEnv(OsimEnv):
 
 
     def generate_new_target(self):
-        theta = random.uniform(math.pi*0, math.pi*2/3)
-        radius = random.uniform(0.3, 0.65)
+        if self.targCond == 1:
+            theta = math.pi/2
+            radius = .6
+        elif self.targCond ==2:
+            thetas = (math.pi/2, math.pi/4)
+            radii = (.4, .2)
+            rand1 = random.randint(0, 1)
+            theta = thetas[rand1]
+            radius = radii[rand1]
+        elif self.targCond == 3:
+            thetas = (math.pi/2, math.pi/4, 0)
+            radii = (.4, .2, .3)
+            rand1 = random.randint(0, 2)
+            theta = thetas[rand1]
+            radius = radii[rand1]
+        else:
+            theta = random.uniform(math.pi*0, math.pi*2/3)
+            radius = random.uniform(0.3, 0.65)
+
         self.target_x = math.cos(theta) * radius 
         self.target_y = -math.sin(theta) * radius + 0.8
-
         print('\ntarget: [{} {}]'.format(self.target_x, self.target_y))
 
         state = self.osim_model.get_state()
@@ -109,11 +125,11 @@ class Arm2DEnv(OsimEnv):
         # print((self.target_x, self.target_y))
         if np.isnan(penalty):
             penalty = 1
-        if penalty < 0.01:
-            return 1
-        else:
-            return 0
-        # return 1.-penalty
+        # if penalty < 0.01:
+        #     return 1
+        # else:
+        #     return 0
+        return 1.-penalty
 
     def get_reward(self):
         return self.reward()
@@ -130,7 +146,7 @@ class Arm2DVecEnv(Arm2DEnv):
         if np.isnan(action).any():
             action = np.nan_to_num(action)
         obs, reward, done, info = super(Arm2DVecEnv, self).step(action, obs_as_dict=obs_as_dict)
-        print(reward)
+        # print(reward)
         if np.isnan(obs).any():
             obs = np.nan_to_num(obs)
             done = True
@@ -148,11 +164,11 @@ class Arm2DVecEnv(Arm2DEnv):
         """
         del info
         penalty = (achieved_goal[-2] - goal[-2])**2 + (achieved_goal[-1] - goal[-1])**2
-        if penalty < 0.01:
-            return 1
-        else:
-            return 0
-        # return np.sum((achieved_goal[-2:] - goal[-2:])**2)
+        # if penalty < 0.01:
+        #     return 1
+        # else:
+        #     return 0
+        return np.sum((achieved_goal[-2:] - goal[-2:])**2)
     
     def __getstate__(self):
         """See `Object.__getstate__.
